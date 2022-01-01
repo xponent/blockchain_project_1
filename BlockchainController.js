@@ -1,9 +1,11 @@
 /**
  *          BlockchainController
- * 
- * This class expose the endpoints that the client applications will use to interact with the 
+ *
+ * This class expose the endpoints that the client applications will use to interact with the
  * Blockchain dataset
  */
+const {request} = require("express");
+
 class BlockchainController {
 
     //The constructor receive the instance of the express.js app and the Blockchain class
@@ -16,6 +18,7 @@ class BlockchainController {
         this.submitStar();
         this.getBlockByHash();
         this.getStarsByOwner();
+        this.chainValidation();
     }
 
     // Enpoint to Get a Block by Height (GET Endpoint)
@@ -115,6 +118,19 @@ class BlockchainController {
             }
             
         });
+    }
+    chainValidation() {
+        this.app.post("/chainValidation", async (req, res) => {
+            if (req) {
+                try {
+                    let errorArray = await this.blockchain.validateChain();
+                    if (errorArray.length > 0) res.status(200).json(errorArray);
+                    else res.status(500).send(`Array empty: ${errorArray}`)
+                } catch (e) {
+                    return res.status(500).send("Validation error.")
+                }
+            }
+        })
     }
 
 }

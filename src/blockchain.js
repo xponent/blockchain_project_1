@@ -105,7 +105,7 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            if (parseInt(new Date().getTime().toString().slice(0, -3)) - parseInt(message.split(':')[1]) > 300) {
+            if (parseInt(new Date().getTime().toString().slice(0, -3)) - parseInt(message.split(':')[1])) {
                 bitcoinMessage.verify(message, address, signature);
                 let starBlock = new BlockClass.Block({"owner": address, "star": star})
                 await self._addBlock(starBlock);
