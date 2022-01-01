@@ -62,12 +62,12 @@ class Blockchain {
      */
     _addBlock(block) {
         return new Promise(async (resolve, reject) => {
-           this.height = this.height + 1;
-           if (this.chain.length > 0) block.previousBlockHash = this.chain[this.chain.length - 1].hash;
-           block.height = this.height;
-           block.time = new Date().getTime().toString().slice(0, -3);
-           block.hash = SHA256(JSON.stringify(block)).toString();
-           resolve(this.chain.push(block));
+            this.height = this.height + 1;
+            if (this.chain.length > 0) block.previousBlockHash = this.chain[this.chain.length - 1].hash;
+            block.height = this.height;
+            block.time = new Date().getTime().toString().slice(0, -3);
+            block.hash = SHA256(JSON.stringify(block)).toString();
+            resolve(this.chain.push(block));
            reject("Add block failure");
         });
     }
@@ -171,12 +171,12 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            self.chain.forEach(value => {
-                if (value.validate() !== true) errorLog.push(value);
-                if (self.chain.length > 0 && value.previousBlockHash === self.chain[self.chain.length - 1].hash)
+            for (const value of self.chain) {
+                if (await value.validate() === false) errorLog.push(value);
+                if (self.chain[value].height > 0 && value.previousBlockHash === self.chain[self.chain.length - 1].hash)
                     console.log("Previous hash validated.");
                 else reject("Chain validation error.")
-            })
+            }
             resolve(errorLog)
         });
     }

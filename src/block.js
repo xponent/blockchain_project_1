@@ -37,10 +37,10 @@ class Block {
      */
     validate() {
         let self = this;
-        return new Promise((resolve, reject) => {
-            if (self.hash === SHA256(JSON.stringify(this).toString())) {
+        return new Promise(async (resolve, reject) => {
+            if (this.hash === SHA256(JSON.stringify(this).toString())) {
                 resolve(true)
-            } else reject("Validation failure.")
+            } else reject(false)
         });
     }
     /**
