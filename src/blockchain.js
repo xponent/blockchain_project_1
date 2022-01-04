@@ -62,13 +62,17 @@ class Blockchain {
      */
     _addBlock(block) {
         return new Promise(async (resolve, reject) => {
-            this.height = this.height + 1;
-            if (this.chain.length > 0) block.previousBlockHash = this.chain[this.chain.length - 1].hash;
-            block.height = this.height;
-            block.time = new Date().getTime().toString().slice(0, -3);
-            block.hash = SHA256(JSON.stringify(block)).toString();
-            resolve(this.chain.push(block));
-           reject("Add block failure");
+            let errors = await this.validateChain();
+            if (errors.length === 0) {
+                this.height = this.height + 1;
+                if (this.chain.length > 0) block.previousBlockHash = this.chain[this.chain.length - 1].hash;
+                block.height = this.height;
+                block.time = new Date().getTime().toString().slice(0, -3);
+                block.hash = SHA256(JSON.stringify(block)).toString();
+                this.chain.push(block);
+                resolve(block);
+            }
+            reject("Add block failure - Chain not validated.");
         });
     }
     /**
@@ -107,10 +111,12 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             // 5 minute verification; remove "<= 300" to run outside of live testing.
             if (parseInt(new Date().getTime().toString().slice(0, -3)) - parseInt(message.split(':')[1]) <= 300) {
-                bitcoinMessage.verify(message, address, signature);
-                let starBlock = new BlockClass.Block({"owner": address, "star": star})
-                await self._addBlock(starBlock);
-                resolve(self.chain)
+                let valid = bitcoinMessage.verify(message, address, signature);
+                if (valid) {
+                    let starBlock = new BlockClass.Block({"owner": address, "star": star})
+                    let block = await self._addBlock(starBlock);
+                    resolve(block)
+                }
             } else resolve("Star Submission Failed.")
         });
     }
@@ -123,7 +129,7 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           resolve(self.chain.filter(hash));
+           resolve(self.chain.find((block) => block.hash === hash));
            reject("Block by Hash retrieval failed.");
         });
     }
@@ -135,7 +141,7 @@ class Blockchain {
     getBlockByHeight(height) {
         let self = this;
         return new Promise((resolve, reject) => {
-            let block = self.chain.filter(p => p.height === height)[0];
+            let block = self.chain.find((b) => b.height === height);
             if(block){
                 resolve(block);
             } else {
@@ -174,8 +180,8 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             for (const value of self.chain) {
                 if (await value.validate() === false) errorLog.push(value);
-                if (value.height > 0 && value.previousBlockHash === self.chain[value.height - 1].hash)
-                    console.log("Previous hash validated.");
+                if (value.height > 0 && value.previousBlockHash !== self.chain[value.height - 1].hash)
+                    errorLog.push(value);
             }
             resolve(errorLog)
         });
