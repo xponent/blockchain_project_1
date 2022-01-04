@@ -125,7 +125,7 @@ class BlockchainController {
                 try {
                     let errorArray = await this.blockchain.validateChain();
                     if (errorArray.length > 0) res.status(200).json(errorArray);
-                    else res.status(500).send(`Array empty: ${errorArray}`)
+                    else res.status(200).send(`Array empty: ${errorArray} - Chain validated.`)
                 } catch (e) {
                     return res.status(500).send("Validation error.")
                 }

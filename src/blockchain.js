@@ -173,9 +173,8 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             for (const value of self.chain) {
                 if (await value.validate() === false) errorLog.push(value);
-                if (self.chain[value].height > 0 && value.previousBlockHash === self.chain[self.chain.length - 1].hash)
+                if (value.height > 0 && value.previousBlockHash === self.chain[value.height - 1].hash)
                     console.log("Previous hash validated.");
-                else reject("Chain validation error.")
             }
             resolve(errorLog)
         });
